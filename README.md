@@ -6,6 +6,8 @@
 
 ## Italiano
 
+Guida completa: [installazione e utilizzo](https://francoconidi.it/syslinuxos-anonimo-guida-installazione-utilizzo/).
+
 SysLinuxOS Anonimo fa passare **il traffico TCP e DNS del computer attraverso Tor** con un clic.
 Quando è acceso, ogni connessione TCP e ogni richiesta DNS passano da Tor. Il resto del traffico
 che esce dal computer viene bloccato, tranne il traffico verso la rete locale (quando l'opzione
@@ -103,6 +105,8 @@ Alla prima installazione, se `/etc/tor/torrc` non è stato modificato, l'istanza
 `tor.service` disattivato; solo `apt purge syslinuxos-anonimo` lo riattiva.
 
 ## English
+
+Full walkthrough: [installation and usage guide](https://syslinuxos.com/syslinuxos-anonimo-installation-usage-guide/).
 
 SysLinuxOS Anonimo routes **the TCP and DNS traffic of the computer through Tor** with one click.
 When it is on, every TCP connection and every DNS query goes through Tor. The rest of the traffic
