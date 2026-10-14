@@ -1,0 +1,20 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    purge)
+        if [ -e /var/lib/syslinuxos-anonimo/default-tor-disabled ]; then
+            systemctl enable tor.service >/dev/null 2>&1 || true
+        fi
+        rm -rf /etc/syslinuxos-anonimo /var/lib/syslinuxos-anonimo
+        ;;
+    remove)
+        # prerm switched anonimo off: drop mode.json, the lock and the torrc.
+        rm -rf /run/syslinuxos-anonimo
+        if [ -d /run/systemd/system ]; then
+            systemctl daemon-reload >/dev/null 2>&1 || true
+        fi
+        ;;
+esac
+
+exit 0

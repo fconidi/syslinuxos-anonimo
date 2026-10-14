@@ -1,0 +1,10 @@
+#!/usr/bin/python3 -IB
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Installed at /usr/lib/syslinuxos-anonimo/anonimo-watch; runs as _anonimo.
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+from watch import main
+
+sys.exit(main())

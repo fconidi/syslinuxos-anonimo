@@ -1,0 +1,20 @@
+[Desktop Entry]
+Type=Application
+Name=SysLinuxOS Anonimo
+GenericName=Tor for the whole system
+GenericName[it]=Tor per tutto il sistema
+GenericName[fr]=Tor pour tout le système
+GenericName[de]=Tor für das ganze System
+GenericName[es]=Tor para todo el sistema
+Comment=Route all traffic of this computer through Tor
+Comment[it]=Instrada tutto il traffico del computer attraverso Tor
+Comment[fr]=Faire passer tout le trafic de l’ordinateur par Tor
+Comment[de]=Den gesamten Datenverkehr des Computers über Tor leiten
+Comment[es]=Enviar todo el tráfico del equipo a través de Tor
+Exec=syslinuxos-anonimo
+TryExec=syslinuxos-anonimo
+Icon=syslinuxos-anonimo
+Terminal=false
+Categories=System;Security;X-SysLinuxOS-Tools;
+Keywords=tor;anonymity;privacy;anonsurf;anonimo;
+StartupNotify=true

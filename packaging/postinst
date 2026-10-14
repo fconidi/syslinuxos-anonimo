@@ -1,0 +1,68 @@
+#!/bin/sh
+set -e
+
+ETC=/etc/syslinuxos-anonimo
+LIB=/var/lib/syslinuxos-anonimo
+
+# Debian's tor enables tor.service on new installs. anonimo does not need it:
+# disable it only when /etc/tor/torrc is untouched (nobody uses Tor for
+# something else), and remember it so purge can enable it again.
+disable_default_tor() {
+    want=$(dpkg-query -W -f='${Conffiles}\n' tor 2>/dev/null | awk '$1 == "/etc/tor/torrc" { print $2 }')
+    have=$(md5sum /etc/tor/torrc 2>/dev/null | cut -d' ' -f1)
+    [ -n "$want" ] && [ "$want" = "$have" ] || return 0
+    systemctl is-enabled --quiet tor.service 2>/dev/null || return 0
+    if [ -d /run/systemd/system ]; then
+        systemctl disable --now tor.service >/dev/null 2>&1 || true
+    else
+        systemctl disable tor.service >/dev/null 2>&1 || true
+    fi
+    touch "$LIB/default-tor-disabled"
+}
+
+# "Start at boot" survives apt remove in settings.json, but prerm disabled the
+# boot unit. The settings loader decides (no JSON parsing in sh); a missing or
+# broken settings file means no.
+boot_wanted() {
+    python3 -IB - >/dev/null 2>&1 <<'PY'
+import sys
+sys.path.insert(0, '/usr/lib/syslinuxos-anonimo')
+from settings import load_settings
+sys.exit(0 if load_settings('/etc/syslinuxos-anonimo/settings.json')['start_at_boot'] else 1)
+PY
+}
+
+case "$1" in
+    configure)
+        if ! getent passwd _anonimo >/dev/null; then
+            adduser --system --group --home "$LIB" --no-create-home \
+                --shell /usr/sbin/nologin --quiet _anonimo
+        fi
+        install -d -m 0755 -o root -g root "$ETC" "$LIB"
+        install -d -m 0700 -o _anonimo -g _anonimo "$LIB/tor"
+        if [ ! -e "$ETC/settings.json" ]; then
+            printf '%s\n' '{"allow_lan": true, "bridges": "none", "close_apps": true, "start_at_boot": false}' > "$ETC/settings.json"
+            chmod 0644 "$ETC/settings.json"
+        fi
+        if [ ! -e "$ETC/obfs4-bridges" ]; then
+            install -m 0600 /dev/null "$ETC/obfs4-bridges"
+        fi
+        if [ -d /run/systemd/system ]; then
+            systemctl daemon-reload >/dev/null 2>&1 || true
+        fi
+        if boot_wanted; then
+            systemctl enable syslinuxos-anonimo-boot.service >/dev/null 2>&1 || true
+        fi
+        if [ -z "$2" ]; then
+            disable_default_tor
+        elif [ -d /run/systemd/system ]; then
+            # Upgrade: the firewall table stays loaded. Restart Tor and the
+            # watcher (BindsTo does not pass a restart on) with the new code,
+            # without the old progress, so nobody reads a stale 100 %.
+            rm -f /run/syslinuxos-anonimo/status/bootstrap.json
+            systemctl try-restart syslinuxos-anonimo-tor.service syslinuxos-anonimo-watch.service >/dev/null 2>&1 || true
+        fi
+        ;;
+esac
+
+exit 0

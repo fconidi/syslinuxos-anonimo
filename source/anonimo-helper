@@ -1,0 +1,12 @@
+#!/usr/bin/python3 -IB
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Installed root-owned at the fixed path named by the polkit policy.
+# Isolated Python ignores PYTHONPATH and the user site, also for root;
+# -B: no __pycache__ under /usr/lib, which dpkg could not remove.
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+from helper import main
+
+sys.exit(main())

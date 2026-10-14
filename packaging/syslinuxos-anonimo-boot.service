@@ -1,0 +1,17 @@
+[Unit]
+Description=Switch on SysLinuxOS Anonimo before the network starts
+Documentation=man:anonimo(1)
+DefaultDependencies=no
+After=local-fs.target
+# Ordering only: nftables.service flushes the whole ruleset at boot.
+After=nftables.service
+Before=network-pre.target shutdown.target
+Wants=network-pre.target
+Conflicts=shutdown.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/syslinuxos-anonimo/anonimo-helper boot
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,29 @@
+[Unit]
+Description=Tor for SysLinuxOS Anonimo
+Documentation=man:anonimo(1)
+Wants=syslinuxos-anonimo-watch.service
+
+[Service]
+Type=notify
+NotifyAccess=all
+User=_anonimo
+Group=_anonimo
+ExecStartPre=/usr/bin/tor --defaults-torrc /dev/null -f /run/syslinuxos-anonimo/torrc --verify-config
+ExecStart=/usr/bin/tor --defaults-torrc /dev/null -f /run/syslinuxos-anonimo/torrc --RunAsDaemon 0
+ExecReload=/bin/kill -HUP $MAINPID
+KillSignal=SIGINT
+TimeoutStartSec=300
+TimeoutStopSec=30
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65536
+RuntimeDirectory=syslinuxos-anonimo/tor
+RuntimeDirectoryMode=0700
+StateDirectory=syslinuxos-anonimo/tor
+StateDirectoryMode=0700
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+CapabilityBoundingSet=

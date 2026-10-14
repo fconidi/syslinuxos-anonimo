@@ -1,0 +1,7 @@
+syslinuxos-anonimo (2026.10.1) tirreno; urgency=medium
+
+  * First release: all traffic through Tor with a dedicated nftables table
+    and a dedicated Tor instance, tray icon and window, anonimo command,
+    obfs4 and snowflake bridges, start at boot, closing network apps.
+
+ -- Franco Conidi <fconidi@gmail.com>  Tue, 13 Oct 2026 23:12:22 +0200

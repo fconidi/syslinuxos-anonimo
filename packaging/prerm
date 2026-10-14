@@ -1,0 +1,16 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    remove|deconfigure)
+        # Never leave the computer without network after removal. In a chroot
+        # (no running systemd) the host firewall must not be touched.
+        if [ -d /run/systemd/system ]; then
+            /usr/lib/syslinuxos-anonimo/anonimo-helper stop >/dev/null 2>&1 \
+                || /usr/sbin/nft delete table inet anonimo >/dev/null 2>&1 || true
+        fi
+        systemctl disable syslinuxos-anonimo-boot.service >/dev/null 2>&1 || true
+        ;;
+esac
+
+exit 0

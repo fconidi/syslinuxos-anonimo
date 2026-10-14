@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+  <vendor>SysLinuxOS</vendor>
+  <vendor_url>https://syslinuxos.com/</vendor_url>
+  <action id="com.syslinuxos.anonimo.helper">
+    <description>Switch SysLinuxOS Anonimo on or off and change its settings</description>
+    <description xml:lang="it">Accendere o spegnere SysLinuxOS Anonimo e cambiarne le impostazioni</description>
+    <description xml:lang="fr">Activer ou désactiver SysLinuxOS Anonimo et modifier ses paramètres</description>
+    <description xml:lang="de">SysLinuxOS Anonimo ein- oder ausschalten und seine Einstellungen ändern</description>
+    <description xml:lang="es">Encender o apagar SysLinuxOS Anonimo y cambiar su configuración</description>
+    <message>Authentication is required to change the Tor protection of this computer</message>
+    <message xml:lang="it">Autenticazione richiesta per modificare la protezione Tor del computer</message>
+    <message xml:lang="fr">Une authentification est nécessaire pour modifier la protection Tor de l’ordinateur</message>
+    <message xml:lang="de">Für Änderungen am Tor-Schutz des Computers ist eine Authentifizierung erforderlich</message>
+    <message xml:lang="es">Se requiere autenticación para cambiar la protección Tor del equipo</message>
+    <icon_name>syslinuxos-anonimo</icon_name>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/lib/syslinuxos-anonimo/anonimo-helper</annotate>
+  </action>
+</policyconfig>

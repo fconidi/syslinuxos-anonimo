@@ -1,0 +1,62 @@
+.TH ANONIMO 1 "October 2026" "syslinuxos-anonimo 2026.10.1" "User Commands"
+.SH NAME
+anonimo \- route the TCP and DNS traffic of the computer through Tor
+.SH SYNOPSIS
+.B anonimo start
+.RB [ \-\-close\-apps | \-\-no\-close\-apps ]
+.br
+.B anonimo stop
+.RB [ \-\-close\-apps | \-\-no\-close\-apps ]
+.br
+.B anonimo status
+.RB [ \-\-json ]
+.RB [ \-\-check ]
+.br
+.B anonimo identity
+.br
+.B anonimo settings
+.RB [ \-\-lan " on|off] [" \-\-bridges " none|obfs4|snowflake] [" \-\-boot " on|off] [" \-\-close\-apps " on|off]"
+.br
+.B anonimo bridges
+.RB [ \-\-set " FILE|\-]"
+.SH DESCRIPTION
+When anonimo is on, every outgoing TCP connection and every DNS query of the
+computer goes through Tor. All other outgoing traffic is blocked, except traffic
+to the local network (when the direct local network option is on, as by default)
+and DHCP.
+anonimo adds its own nftables table (\fBinet anonimo\fR) and runs its own Tor
+instance (\fBsyslinuxos\-anonimo\-tor.service\fR); it does not change ufw rules,
+\fI/etc/resolv.conf\fR or \fI/etc/tor/torrc\fR. The graphical interface is
+\fBsyslinuxos\-anonimo\fR.
+Services of this computer (SSH, web server, file sharing) cannot answer hosts
+outside the local network, nor local hosts when the direct local network option
+is off. Connections to the Internet already open when anonimo switches on are
+cut. With the
+direct local network option on, local devices are reachable by IP address.
+Starting, reloading or stopping \fBnftables.service\fR while anonimo is on
+loads its table again; after loading nftables rules by hand
+(\fBnft \-f\fR), run
+.B anonimo start
+again.
+.SH EXIT STATUS
+For \fBstatus\fR: 0 protected, 1 error, 2 connecting, 3 off.
+Once protected, \fBstart\fR asks check.torproject.org whether traffic goes
+through Tor and exits with 1 when it does not.
+.SH FILES
+.I /etc/syslinuxos-anonimo/settings.json
+.br
+.I /etc/syslinuxos-anonimo/obfs4-bridges
+.SH RECOVERY
+To get the normal network back, run
+.BR "anonimo stop \-\-no\-close\-apps" ,
+then
+.BR "anonimo settings \-\-boot off" .
+If anonimo does not respond, this command removes the table for the current
+session only:
+.BR "sudo nft delete table inet anonimo" .
+With start at boot on, the table is loaded again at every boot until
+"anonimo settings \-\-boot off" is run. With start at boot off, a reboot always
+brings the normal network back.
+.SH SEE ALSO
+.BR tor (1),
+.BR nft (8)
