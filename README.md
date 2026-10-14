@@ -27,7 +27,7 @@ Funziona in modo diverso da AnonSurf, a cui si ispira:
 
 ### Installazione
 
-Per Debian 13 (trixie) e derivate; testato su SysLinuxOS 13 (MATE e GNOME Classic). Il pacchetto è
+Per Debian 13 (trixie) e derivate; testato su SysLinuxOS 13 (MATE, GNOME e GNOME Classic). Il pacchetto è
 `all` (Python 3 + PyQt5) e non è stato provato su Debian "liscia" né su Ubuntu.
 Scarica il `.deb` dalle [Releases](https://github.com/fconidi/syslinuxos-anonimo/releases) e installalo con apt, così arrivano anche le dipendenze (`tor`, `obfs4proxy`, `nftables`, `python3-pyqt5`, `pkexec`):
 
@@ -36,7 +36,7 @@ sudo apt install ./syslinuxos-anonimo_2026.10.1_all.deb
 ```
 
 Consigliati (installati da apt se le Recommends sono attive): `snowflake-client`, `bleachbit` e un
-agente polkit nella sessione grafica. Su **GNOME** l'icona nell'area di notifica richiede
+agente polkit nella sessione grafica. Su **GNOME** l'icona nell'area di notifica richiede obbligatoriamente
 l'estensione AppIndicator: `sudo apt install gnome-shell-extension-appindicator`, poi attivare
 `ubuntu-appindicators@ubuntu.com` (`gnome-extensions enable …`) e rifare il login. Senza l'estensione
 anonimo funziona lo stesso, solo con la finestra.
@@ -125,7 +125,7 @@ It works differently from AnonSurf, which inspired it:
 
 ### Installation
 
-For Debian 13 (trixie) and derivatives; tested on SysLinuxOS 13 (MATE and GNOME Classic). The package is
+For Debian 13 (trixie) and derivatives; tested on SysLinuxOS 13 (MATE, GNOME and GNOME Classic). The package is
 `all` (Python 3 + PyQt5) and has not been tried on plain Debian or on Ubuntu.
 Download the `.deb` from [Releases](https://github.com/fconidi/syslinuxos-anonimo/releases) and install it with apt, so the dependencies come along too (`tor`, `obfs4proxy`, `nftables`, `python3-pyqt5`, `pkexec`):
 
@@ -134,7 +134,7 @@ sudo apt install ./syslinuxos-anonimo_2026.10.1_all.deb
 ```
 
 Recommended (installed by apt when Recommends are enabled): `snowflake-client`, `bleachbit` and a
-polkit agent in the graphical session. On **GNOME** the notification-area icon needs the
+polkit agent in the graphical session. On **GNOME** the notification-area icon requires the
 AppIndicator extension: `sudo apt install gnome-shell-extension-appindicator`, then enable
 `ubuntu-appindicators@ubuntu.com` (`gnome-extensions enable …`) and log in again. Without the extension
 anonimo still works, with the window only.

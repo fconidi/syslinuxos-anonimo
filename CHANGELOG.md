@@ -20,4 +20,4 @@ First release.
 - Interface in English, Italian, French, German and Spanish.
 - `obfs4proxy` is a hard dependency, so obfs4 bridges work right after installation.
 - Checked with 202 automated tests, a 40-check run in a SysLinuxOS Live VM with packet capture
-  analysis, and manual tests on SysLinuxOS MATE and GNOME Classic. See [VALIDATION.md](VALIDATION.md).
+  analysis, and manual tests on SysLinuxOS MATE, GNOME and GNOME Classic (obfs4 bridges, reboot with start at boot, tray). See [VALIDATION.md](VALIDATION.md).
