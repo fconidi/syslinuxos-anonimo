@@ -29,8 +29,8 @@ Funziona in modo diverso da AnonSurf, a cui si ispira:
 
 ### Installazione
 
-Per Debian 13 (trixie) e derivate; testato su SysLinuxOS 13 (MATE, GNOME e GNOME Classic). Il pacchetto è
-`all` (Python 3 + PyQt5) e non è stato provato su Debian "liscia" né su Ubuntu.
+Per Debian 13 (trixie) e derivate. Il pacchetto è
+`all` (Python 3 + PyQt5).
 Scarica il `.deb` dalle [Releases](https://github.com/fconidi/syslinuxos-anonimo/releases) e installalo con apt, così arrivano anche le dipendenze (`tor`, `obfs4proxy`, `nftables`, `python3-pyqt5`, `pkexec`):
 
 ```bash
@@ -44,7 +44,7 @@ l'estensione AppIndicator: `sudo apt install gnome-shell-extension-appindicator`
 anonimo funziona lo stesso, solo con la finestra.
 
 Rimozione: `sudo apt remove syslinuxos-anonimo` (`purge` riattiva anche `tor.service`, vedi sotto).
-Cosa è stato verificato: [VALIDATION.md](VALIDATION.md). Non usare su un computer importante
+Non usare su un computer importante
 prima di aver provato `anonimo stop` e il recupero descritto più sotto.
 
 ### Uso
@@ -129,8 +129,8 @@ It works differently from AnonSurf, which inspired it:
 
 ### Installation
 
-For Debian 13 (trixie) and derivatives; tested on SysLinuxOS 13 (MATE, GNOME and GNOME Classic). The package is
-`all` (Python 3 + PyQt5) and has not been tried on plain Debian or on Ubuntu.
+For Debian 13 (trixie) and derivatives. The package is
+`all` (Python 3 + PyQt5).
 Download the `.deb` from [Releases](https://github.com/fconidi/syslinuxos-anonimo/releases) and install it with apt, so the dependencies come along too (`tor`, `obfs4proxy`, `nftables`, `python3-pyqt5`, `pkexec`):
 
 ```bash
@@ -144,7 +144,7 @@ AppIndicator extension: `sudo apt install gnome-shell-extension-appindicator`, t
 anonimo still works, with the window only.
 
 Removal: `sudo apt remove syslinuxos-anonimo` (`purge` also enables `tor.service` again, see below).
-What was verified: [VALIDATION.md](VALIDATION.md). Do not use it on an important computer before
+Do not use it on an important computer before
 you have tried `anonimo stop` and the recovery described below.
 
 ### Usage
