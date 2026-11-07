@@ -11,6 +11,7 @@ case "$1" in
     remove)
         # prerm switched anonimo off: drop mode.json, the lock and the torrc.
         rm -rf /run/syslinuxos-anonimo
+        rm -rf /run/syslinuxos-anonimo-firewall
         if [ -d /run/systemd/system ]; then
             systemctl daemon-reload >/dev/null 2>&1 || true
         fi

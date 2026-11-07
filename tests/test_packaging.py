@@ -65,6 +65,7 @@ class PackagingTests(unittest.TestCase):
         firewall_watch = text('syslinuxos-anonimo-firewall-watch.service')
         self.assertIn('ExecStart=/usr/lib/syslinuxos-anonimo/anonimo-firewall-watch\n', firewall_watch)
         self.assertIn('Restart=always\n', firewall_watch)
+        self.assertIn('RuntimeDirectory=syslinuxos-anonimo-firewall\n', firewall_watch)
         self.assertIn('WantedBy=multi-user.target\n', firewall_watch)
 
     def test_nftables_drop_in_reapplies_the_table(self):

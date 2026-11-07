@@ -50,7 +50,8 @@ class ClientTests(unittest.TestCase):
         self.env.start()
         self.tmp = tempfile.TemporaryDirectory()
         self.paths = Paths.under(self.tmp.name)
-        for directory in (self.paths.etc, self.paths.run, self.paths.bootstrap.parent):
+        for directory in (self.paths.etc, self.paths.run, self.paths.bootstrap.parent,
+                          self.paths.firewall_health.parent):
             directory.mkdir(parents=True)
 
     def tearDown(self):

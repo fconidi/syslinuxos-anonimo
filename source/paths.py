@@ -46,7 +46,7 @@ class Paths:
     control_socket = property(lambda self: self.run / 'tor' / 'control')
     cookie = property(lambda self: self.run / 'tor' / 'control.authcookie')
     bootstrap = property(lambda self: self.run / 'status' / 'bootstrap.json')
-    firewall_health = property(lambda self: self.run / 'status' / 'firewall.json')
+    firewall_health = property(lambda self: self.run.parent / 'syslinuxos-anonimo-firewall' / 'status.json')
     data_dir = property(lambda self: self.lib / 'tor')
     default_tor_marker = property(lambda self: self.lib / 'default-tor-disabled')
 
