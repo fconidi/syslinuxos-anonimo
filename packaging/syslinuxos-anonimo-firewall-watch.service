@@ -1,0 +1,17 @@
+[Unit]
+Description=Firewall integrity watcher for SysLinuxOS Anonimo
+After=local-fs.target nftables.service
+
+[Service]
+Type=simple
+ExecStart=/usr/lib/syslinuxos-anonimo/anonimo-firewall-watch
+Restart=always
+RestartSec=1
+NoNewPrivileges=yes
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+CapabilityBoundingSet=CAP_NET_ADMIN
+
+[Install]
+WantedBy=multi-user.target

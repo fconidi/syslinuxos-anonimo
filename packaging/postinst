@@ -49,6 +49,10 @@ case "$1" in
         fi
         if [ -d /run/systemd/system ]; then
             systemctl daemon-reload >/dev/null 2>&1 || true
+            systemctl enable --now syslinuxos-anonimo-firewall-watch.service >/dev/null 2>&1 || true
+            if [ -n "$2" ]; then
+                systemctl restart syslinuxos-anonimo-firewall-watch.service >/dev/null 2>&1 || true
+            fi
         fi
         if boot_wanted; then
             systemctl enable syslinuxos-anonimo-boot.service >/dev/null 2>&1 || true

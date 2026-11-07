@@ -11,6 +11,7 @@ import tempfile
 import threading
 import time
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'source'))
@@ -69,7 +70,7 @@ class FakeSystem:
     def tor_ids(self):
         if not self.tor_user:
             raise HelperError('System user _anonimo is missing')
-        return os.getuid(), os.getgid()
+        return 4242, os.getgid()
 
     def unit_state(self, unit):
         return self.unit
@@ -140,7 +141,7 @@ class StartStopTests(HelperTestCase):
         self.assertLess(self.index(RUNUSER, '-u', '_anonimo'), self.index(NFT, '-f'))
         self.assertLess(self.index(NFT, '-f'), self.index(SYSTEMCTL, 'restart', TOR_UNIT))
         rules = self.system.inputs[NFT]
-        self.assertIn(f'meta skuid {os.getuid()} return', rules)
+        self.assertIn('meta skuid 4242 return', rules)
         self.assertIn('ip daddr @lan4 return', rules)
         self.assertEqual(self.mode()['mode'], 'on')
         self.assertIsNone(self.mode()['error'])
@@ -282,6 +283,20 @@ class StartStopTests(HelperTestCase):
         self.assertEqual(self.main('stop'), 1)
         self.assertIn('Cannot remove the firewall rules', self.events()[-1]['message'])
 
+    def test_stop_records_off_when_health_file_cannot_be_written(self):
+        self.settings()
+        self.helper.start()
+
+        def write(path, data, *args, **kwargs):
+            if path == self.paths.firewall_health:
+                raise OSError('health file unavailable')
+            return write_json_atomic(path, data, *args, **kwargs)
+
+        with patch('helper.write_json_atomic', side_effect=write):
+            self.assertEqual(self.helper.stop(), 0)
+        self.assertEqual(self.mode()['mode'], 'off')
+        self.assertTrue(self.called(NFT, 'delete'))
+
 
 class BootTests(HelperTestCase):
     def test_boot_loads_firewall_without_waiting(self):
@@ -341,7 +356,7 @@ class ReapplyTests(HelperTestCase):
         self.system.calls.clear()
         self.assertEqual(self.main('reapply'), 0)
         self.assertEqual([call[:2] for call in self.system.calls], [[NFT, '-f'], [NFT, '-f']])
-        self.assertIn(f'meta skuid {os.getuid()} return', self.system.inputs[NFT])
+        self.assertIn('meta skuid 4242 return', self.system.inputs[NFT])
         self.assertNotIn('@lan4', self.system.inputs[NFT])
         self.assertEqual(self.mode(), mode)
         self.assertEqual(self.events()[-1], {'event': 'done', 'state': 'reapplied'})
@@ -487,6 +502,42 @@ class ReapplyTests(HelperTestCase):
 
 
 class SettingsActionTests(HelperTestCase):
+    def test_failed_boot_enable_keeps_previous_settings(self):
+        self.settings()
+        before = self.paths.settings.read_bytes()
+        self.system.fail[(SYSTEMCTL, 'enable')] = (1, '', 'unit error')
+        new = {'allow_lan': True, 'bridges': 'none', 'start_at_boot': True, 'close_apps': False}
+        self.assertEqual(self.main('set-settings', json.dumps(new)), 1)
+        self.assertEqual(self.paths.settings.read_bytes(), before)
+
+    def test_failed_boot_enable_preserves_invalid_settings_bytes(self):
+        self.paths.settings.write_bytes(b'\xff')
+        self.system.fail[(SYSTEMCTL, 'enable')] = (1, '', 'unit error')
+        new = {'allow_lan': True, 'bridges': 'none', 'start_at_boot': True, 'close_apps': False}
+        self.assertEqual(self.main('set-settings', json.dumps(new)), 1)
+        self.assertEqual(self.paths.settings.read_bytes(), b'\xff')
+
+    def test_invalid_new_tor_configuration_keeps_previous_settings(self):
+        self.settings()
+        self.helper.start()
+        before_settings = self.paths.settings.read_bytes()
+        before_torrc = self.paths.torrc.read_bytes()
+        self.system.fail[(RUNUSER, '-u')] = (1, '', 'bad bridge')
+        new = {'allow_lan': False, 'bridges': 'snowflake', 'start_at_boot': False, 'close_apps': True}
+        self.assertEqual(self.main('set-settings', json.dumps(new)), 1)
+        self.assertEqual(self.paths.settings.read_bytes(), before_settings)
+        self.assertEqual(self.paths.torrc.read_bytes(), before_torrc)
+
+    def test_failed_tor_restart_restores_previous_settings_and_firewall(self):
+        self.settings()
+        self.helper.start()
+        before = self.paths.settings.read_bytes()
+        self.system.fail[(SYSTEMCTL, 'restart')] = (1, '', 'restart failed')
+        new = {'allow_lan': False, 'bridges': 'snowflake', 'start_at_boot': False, 'close_apps': True}
+        self.assertEqual(self.main('set-settings', json.dumps(new)), 1)
+        self.assertEqual(self.paths.settings.read_bytes(), before)
+        self.assertIn('@lan4', self.system.inputs[NFT])
+
     def test_set_settings_writes_and_enables_boot(self):
         self.settings()
         new = {'allow_lan': True, 'bridges': 'none', 'start_at_boot': True, 'close_apps': False}
@@ -547,6 +598,17 @@ class SettingsActionTests(HelperTestCase):
     def test_set_bridges_rejects_invalid_line(self):
         self.assertEqual(self.main('set-bridges', 'obfs4 nonsense\n'), 1)
         self.assertEqual(self.events()[-1]['message'], 'Invalid obfs4 bridge line')
+
+    def test_failed_bridge_configuration_restores_previous_lines(self):
+        self.paths.obfs4_bridges.write_text(LINE + '\n')
+        self.settings(bridges='obfs4')
+        self.helper.start()
+        before_torrc = self.paths.torrc.read_bytes()
+        self.system.fail[(RUNUSER, '-u')] = (1, '', 'bad bridge')
+        changed = LINE.replace('192.0.2.10', '192.0.2.11')
+        self.assertEqual(self.main('set-bridges', f'Bridge {changed}\n'), 1)
+        self.assertEqual(self.paths.obfs4_bridges.read_text(), LINE + '\n')
+        self.assertEqual(self.paths.torrc.read_bytes(), before_torrc)
 
     def test_get_bridges(self):
         self.paths.obfs4_bridges.write_text(LINE + '\n')

@@ -62,6 +62,10 @@ class PackagingTests(unittest.TestCase):
         for line in ('After=nftables.service', 'Before=network-pre.target shutdown.target',
                      'Wants=network-pre.target', f'ExecStart={HELPER} boot', 'WantedBy=multi-user.target'):
             self.assertIn(line + '\n', boot)
+        firewall_watch = text('syslinuxos-anonimo-firewall-watch.service')
+        self.assertIn('ExecStart=/usr/lib/syslinuxos-anonimo/anonimo-firewall-watch\n', firewall_watch)
+        self.assertIn('Restart=always\n', firewall_watch)
+        self.assertIn('WantedBy=multi-user.target\n', firewall_watch)
 
     def test_nftables_drop_in_reapplies_the_table(self):
         drop_in = text('nftables-syslinuxos-anonimo.conf')
@@ -80,7 +84,7 @@ class PackagingTests(unittest.TestCase):
     def test_root_and_watcher_python_write_no_bytecode(self):
         # Root running the helper must not leave __pycache__ under /usr/lib, or
         # dpkg cannot remove the directory.
-        for name in ('anonimo-helper', 'anonimo-watch'):
+        for name in ('anonimo-helper', 'anonimo-watch', 'anonimo-firewall-watch'):
             with self.subTest(script=name):
                 first = (ROOT / 'source' / name).read_text(encoding='utf-8').splitlines()[0]
                 self.assertEqual(first, '#!/usr/bin/python3 -IB')

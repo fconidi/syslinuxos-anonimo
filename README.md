@@ -23,7 +23,9 @@ Funziona in modo diverso da AnonSurf, a cui si ispira:
 - è **a prova di guasto**: se Tor si blocca, il traffico verso Internet resta fermo invece di uscire in chiaro;
 - se `nftables.service` viene avviato, ricaricato o fermato mentre anonimo è acceso (il file
   `/etc/nftables.conf` di Debian svuota tutte le regole), la tabella di anonimo viene ricaricata subito.
-  Dopo aver caricato a mano le proprie regole nftables (`nft -f …`), eseguire di nuovo `anonimo start`.
+  Un servizio controlla la tabella ogni secondo e la ripristina anche dopo uno svuotamento esterno.
+  Un processo con privilegi root che svuota tutte le regole può comunque creare un breve intervallo
+  di traffico non protetto prima del ripristino.
 
 ![SysLinuxOS Anonimo: spento e protetto](docs/screenshots/anonimo-off-it.png) ![SysLinuxOS Anonimo: protetto](docs/screenshots/anonimo-protected-it.png)
 
@@ -34,7 +36,7 @@ Per Debian 13 (trixie) e derivate. Il pacchetto è
 Scarica il `.deb` dalle [Releases](https://github.com/fconidi/syslinuxos-anonimo/releases) e installalo con apt, così arrivano anche le dipendenze (`tor`, `obfs4proxy`, `nftables`, `python3-pyqt5`, `pkexec`):
 
 ```bash
-sudo apt install ./syslinuxos-anonimo_2026.10.1_all.deb
+sudo apt install ./syslinuxos-anonimo_2026.10.2_all.deb
 ```
 
 Consigliati (installati da apt se le Recommends sono attive): `snowflake-client`, `bleachbit` e un
@@ -123,7 +125,9 @@ It works differently from AnonSurf, which inspired it:
 - it **fails closed**: if Tor stops, traffic to the Internet stays blocked instead of leaving in the clear;
 - if `nftables.service` is started, reloaded or stopped while anonimo is on (Debian's
   `/etc/nftables.conf` flushes all rules), anonimo's table is loaded again at once.
-  After loading your own nftables rules by hand (`nft -f …`), run `anonimo start` again.
+  A service checks the table every second and restores it after an unrelated ruleset flush.
+  A root process that clears all rules can still create a short interval of unprotected traffic
+  before the table is restored.
 
 ![SysLinuxOS Anonimo: off and protected](docs/screenshots/anonimo-off-en.png) ![SysLinuxOS Anonimo: protected](docs/screenshots/anonimo-protected-en.png)
 
@@ -134,7 +138,7 @@ For Debian 13 (trixie) and derivatives. The package is
 Download the `.deb` from [Releases](https://github.com/fconidi/syslinuxos-anonimo/releases) and install it with apt, so the dependencies come along too (`tor`, `obfs4proxy`, `nftables`, `python3-pyqt5`, `pkexec`):
 
 ```bash
-sudo apt install ./syslinuxos-anonimo_2026.10.1_all.deb
+sudo apt install ./syslinuxos-anonimo_2026.10.2_all.deb
 ```
 
 Recommended (installed by apt when Recommends are enabled): `snowflake-client`, `bleachbit` and a

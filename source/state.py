@@ -4,6 +4,7 @@ import json
 import os
 import re
 import tempfile
+import time
 from pathlib import Path
 
 ACTIVE_UNIT_STATES = ('active', 'reloading')
@@ -25,7 +26,7 @@ def write_text_atomic(path, text, mode=0o644, uid=-1, gid=-1):
     path = Path(path)
     fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=f'.{path.name}.')
     try:
-        with os.fdopen(fd, 'w', encoding='utf-8') as handle:
+        with os.fdopen(fd, 'w', encoding='utf-8', errors='surrogateescape') as handle:
             handle.write(text)
             handle.flush()
             os.fsync(handle.fileno())
@@ -64,10 +65,20 @@ def parse_bootstrap_phase(value):
             'warning': fields.get('WARNING', ''), 'reason': fields.get('REASON', '')}
 
 
-def compute_state(mode, bootstrap, unit_state):
+def firewall_present(health, now=None):
+    """Only a recent privileged nftables observation can confirm protection."""
+    now = time.time() if now is None else now
+    updated = (health or {}).get('updated')
+    return (health or {}).get('present') is True and isinstance(updated, (int, float)) \
+        and not isinstance(updated, bool) and 0 <= now - updated <= 3
+
+
+def compute_state(mode, bootstrap, unit_state, firewall_ok=True):
     """The spec's state table: rules in order, first match wins."""
     if not mode or mode.get('mode') != 'on':
         return 'off'
+    if not firewall_ok:
+        return 'error'
     progress = (bootstrap or {}).get('progress')
     if unit_state in ACTIVE_UNIT_STATES and progress == 100:
         return 'protected'

@@ -20,6 +20,7 @@ def expected_files():
         LIB + 'VERSION': REGULAR,
         LIB + 'anonimo-helper': EXECUTABLE,
         LIB + 'anonimo-watch': EXECUTABLE,
+        LIB + 'anonimo-firewall-watch': EXECUTABLE,
         './usr/bin/anonimo': EXECUTABLE,
         './usr/bin/syslinuxos-anonimo': EXECUTABLE,
         './usr/share/polkit-1/actions/com.syslinuxos.anonimo.helper.policy': REGULAR,
@@ -33,7 +34,7 @@ def expected_files():
         './usr/share/doc/syslinuxos-anonimo/changelog.gz': REGULAR,
         './usr/share/man/man1/anonimo.1.gz': REGULAR,
     })
-    for unit in ('tor', 'watch', 'boot'):
+    for unit in ('tor', 'watch', 'boot', 'firewall-watch'):
         files[f'./usr/lib/systemd/system/syslinuxos-anonimo-{unit}.service'] = REGULAR
     files['./usr/lib/systemd/system/nftables.service.d/syslinuxos-anonimo.conf'] = REGULAR
     for state in ('off', 'connecting', 'protected', 'error'):

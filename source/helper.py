@@ -142,10 +142,10 @@ class Helper:
         except (OSError, SettingsError):
             return []
 
-    def _prepare(self):
+    def _prepare(self, settings=None):
         """Validate settings, write the torrc and let Tor check it. Changes
         nothing else, so a failure here leaves the network as it was."""
-        settings = load_settings(self.paths.settings)
+        settings = load_settings(self.paths.settings) if settings is None else settings
         kind = settings['bridges']
         obfs4 = self._obfs4_lines() if kind == 'obfs4' else []
         snowflake = read_bridge_file(self.paths.snowflake_bridges) if kind == 'snowflake' else []
@@ -170,11 +170,21 @@ class Helper:
         result = self.system.run([NFT, '-f', '-'], input_text=rules)
         if result.returncode != 0:
             raise HelperError('Cannot load the firewall rules: ' + _last_line(result))
+        try:
+            self.paths.firewall_health.parent.mkdir(mode=0o755, parents=True, exist_ok=True)
+            write_json_atomic(self.paths.firewall_health, {'present': True, 'updated': self.system.wall()})
+        except OSError:
+            pass  # The watcher will report an unavailable observation.
 
     def _delete_firewall(self):
         result = self.system.run([NFT, *DELETE_ARGS])
         if result.returncode != 0 and 'No such file or directory' not in (result.stderr or ''):
             raise HelperError('Cannot remove the firewall rules: ' + _last_line(result))
+        try:
+            self.paths.firewall_health.parent.mkdir(mode=0o755, parents=True, exist_ok=True)
+            write_json_atomic(self.paths.firewall_health, {'present': False, 'updated': self.system.wall()})
+        except OSError:
+            pass  # Off must still be recorded after the table is removed.
 
     def _restart_tor(self):
         """Restart the Tor unit; returns the wall-clock time at which the
@@ -338,22 +348,52 @@ class Helper:
             except SettingsError:
                 old = None
             self.paths.etc.mkdir(mode=0o755, parents=True, exist_ok=True)
-            write_json_atomic(self.paths.settings, new, mode=0o644)
-            if old is None or old['start_at_boot'] != new['start_at_boot']:
-                verb = 'enable' if new['start_at_boot'] else 'disable'
-                result = self.system.run([SYSTEMCTL, verb, BOOT_UNIT])
-                if result.returncode != 0:
-                    raise HelperError('Cannot change start at boot: ' + _last_line(result))
             mode = read_json(self.paths.mode)
-            if mode and mode.get('mode') == 'on':
-                if old is None or old['bridges'] != new['bridges']:
-                    settings, uid = self._prepare()
-                    self._load_firewall(uid, settings['allow_lan'])
-                    self._write_mode('on', settings=settings)
+            on = bool(mode) and mode.get('mode') == 'on'
+            bridge_changed = on and (old is None or old['bridges'] != new['bridges'])
+            lan_changed = on and (old is None or old['allow_lan'] != new['allow_lan'])
+            boot_changed = old is None or old['start_at_boot'] != new['start_at_boot']
+            old_torrc = self.paths.torrc.read_bytes() if self.paths.torrc.exists() else None
+            old_settings = self.paths.settings.read_bytes() if self.paths.settings.exists() else None
+            boot_applied = firewall_applied = restart_attempted = False
+            try:
+                uid = self._prepare(new)[1] if bridge_changed else None
+                if boot_changed:
+                    verb = 'enable' if new['start_at_boot'] else 'disable'
+                    result = self.system.run([SYSTEMCTL, verb, BOOT_UNIT])
+                    if result.returncode != 0:
+                        raise HelperError('Cannot change start at boot: ' + _last_line(result))
+                    boot_applied = True
+                if bridge_changed or lan_changed:
+                    self._load_firewall(uid if uid is not None else self.system.tor_ids()[0], new['allow_lan'])
+                    firewall_applied = True
+                if bridge_changed:
+                    restart_attempted = True
                     self._restart_tor()
-                elif old['allow_lan'] != new['allow_lan']:
-                    self._load_firewall(self.system.tor_ids()[0], new['allow_lan'])
-                    self._write_mode('on', settings=new, error=mode.get('error'))
+                write_json_atomic(self.paths.settings, new, mode=0o644)
+                if on and (bridge_changed or lan_changed):
+                    self._write_mode('on', settings=new,
+                                     error=None if bridge_changed else mode.get('error'))
+            except Exception:
+                if old_torrc is None:
+                    self.paths.torrc.unlink(missing_ok=True)
+                else:
+                    write_text_atomic(self.paths.torrc, old_torrc.decode('utf-8'), mode=0o640,
+                                      gid=self.system.tor_ids()[1])
+                if old_settings is None:
+                    self.paths.settings.unlink(missing_ok=True)
+                else:
+                    write_text_atomic(self.paths.settings, old_settings.decode('utf-8', 'surrogateescape'))
+                if firewall_applied and old is not None:
+                    self._load_firewall(self.system.tor_ids()[0], old['allow_lan'])
+                if restart_attempted:
+                    self.paths.bootstrap.unlink(missing_ok=True)
+                    self.system.run([SYSTEMCTL, 'restart', TOR_UNIT], timeout=120)
+                if boot_applied and old is not None:
+                    self.system.run([SYSTEMCTL, 'enable' if old['start_at_boot'] else 'disable', BOOT_UNIT])
+                if on and old is not None:
+                    self._write_mode('on', settings=old, error=mode.get('error'))
+                raise
         self.emit('done', state='settings')
         return 0
 
@@ -367,12 +407,34 @@ class Helper:
             if not lines and settings['bridges'] == 'obfs4':
                 raise HelperError('Add at least one obfs4 bridge line first')
             self.paths.etc.mkdir(mode=0o755, parents=True, exist_ok=True)
-            write_text_atomic(self.paths.obfs4_bridges, ''.join(line + '\n' for line in lines), mode=0o600)
             mode = read_json(self.paths.mode)
-            if mode and mode.get('mode') == 'on' and settings['bridges'] == 'obfs4':
-                settings, _ = self._prepare()
-                self._write_mode('on', settings=settings)
-                self._restart_tor()
+            old_bridges = self.paths.obfs4_bridges.read_bytes() if self.paths.obfs4_bridges.exists() else None
+            old_torrc = self.paths.torrc.read_bytes() if self.paths.torrc.exists() else None
+            restart_attempted = False
+            try:
+                write_text_atomic(self.paths.obfs4_bridges, ''.join(line + '\n' for line in lines), mode=0o600)
+                if mode and mode.get('mode') == 'on' and settings['bridges'] == 'obfs4':
+                    self._prepare()
+                    restart_attempted = True
+                    self._restart_tor()
+                    self._write_mode('on', settings=settings)
+            except Exception:
+                if old_bridges is None:
+                    self.paths.obfs4_bridges.unlink(missing_ok=True)
+                else:
+                    write_text_atomic(self.paths.obfs4_bridges,
+                                      old_bridges.decode('utf-8', 'surrogateescape'), mode=0o600)
+                if old_torrc is None:
+                    self.paths.torrc.unlink(missing_ok=True)
+                else:
+                    write_text_atomic(self.paths.torrc, old_torrc.decode('utf-8'), mode=0o640,
+                                      gid=self.system.tor_ids()[1])
+                if restart_attempted:
+                    self.paths.bootstrap.unlink(missing_ok=True)
+                    result = self.system.run([SYSTEMCTL, 'restart', TOR_UNIT], timeout=120)
+                    if result.returncode == 0:
+                        self._write_mode('on', settings=settings)
+                raise
         self.emit('done', state='bridges', count=len(lines))
         return 0
 

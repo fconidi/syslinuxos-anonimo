@@ -5,6 +5,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from unittest.mock import patch
 
@@ -59,6 +60,7 @@ class ClientTests(unittest.TestCase):
     def test_read_status(self):
         self.assertEqual(client.read_status(self.paths, unit='inactive')['state'], 'off')
         write_json_atomic(self.paths.mode, {'mode': 'on', 'error': None})
+        write_json_atomic(self.paths.firewall_health, {'present': True, 'updated': time.time()})
         write_json_atomic(self.paths.bootstrap, {'progress': 45, 'summary': 'Loading'})
         status = client.read_status(self.paths, unit='active')
         self.assertEqual((status['state'], status['progress'], status['summary']), ('connecting', 45, 'Loading'))
@@ -67,6 +69,15 @@ class ClientTests(unittest.TestCase):
         self.assertEqual((failed['state'], failed['error']), ('error', 'Tor is not running'))
         self.paths.settings.write_text('{broken')
         self.assertTrue(client.read_status(self.paths, unit='active')['settings']['allow_lan'])
+
+    def test_protected_requires_fresh_firewall_observation(self):
+        write_json_atomic(self.paths.mode, {'mode': 'on', 'error': None})
+        write_json_atomic(self.paths.bootstrap, {'progress': 100})
+        self.assertEqual(client.read_status(self.paths, unit='active')['state'], 'error')
+        write_json_atomic(self.paths.firewall_health, {'present': True, 'updated': time.time() - 10})
+        self.assertEqual(client.read_status(self.paths, unit='active')['state'], 'error')
+        write_json_atomic(self.paths.firewall_health, {'present': True, 'updated': time.time()})
+        self.assertEqual(client.read_status(self.paths, unit='active')['state'], 'protected')
 
     def test_unit_state(self):
         run = lambda argv, **kw: subprocess.CompletedProcess(argv, 3, 'inactive\n', '')

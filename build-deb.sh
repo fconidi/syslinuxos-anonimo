@@ -23,10 +23,11 @@ mkdir -p "$PACKAGE_DIR/DEBIAN" "$PACKAGE_DIR/$LIB" "$PACKAGE_DIR/usr/share/doc/$
 for file in "$WORKDIR/source/"*.py "$WORKDIR/source/VERSION"; do
     install -m644 "$file" "$PACKAGE_DIR/$LIB/"
 done
-install -m755 "$WORKDIR/source/anonimo-helper" "$WORKDIR/source/anonimo-watch" "$PACKAGE_DIR/$LIB/"
+install -m755 "$WORKDIR/source/anonimo-helper" "$WORKDIR/source/anonimo-watch" \
+    "$WORKDIR/source/anonimo-firewall-watch" "$PACKAGE_DIR/$LIB/"
 install -Dm755 "$WORKDIR/packaging/anonimo" "$PACKAGE_DIR/usr/bin/anonimo"
 install -Dm755 "$WORKDIR/packaging/$PKG_NAME" "$PACKAGE_DIR/usr/bin/$PKG_NAME"
-for unit in tor watch boot; do
+for unit in tor watch boot firewall-watch; do
     install -Dm644 "$WORKDIR/packaging/$PKG_NAME-$unit.service" \
         "$PACKAGE_DIR/usr/lib/systemd/system/$PKG_NAME-$unit.service"
 done

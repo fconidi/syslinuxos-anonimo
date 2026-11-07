@@ -1,3 +1,11 @@
+syslinuxos-anonimo (2026.10.2) tirreno; urgency=medium
+
+  * Detect and repair a missing nftables protection table.
+  * Report a failed Tor exit check as an error in the status command.
+  * Restore previous settings and bridge lines when a configuration change fails.
+
+ -- Franco Conidi <fconidi@gmail.com>  Sat, 07 Nov 2026 18:15:00 +0100
+
 syslinuxos-anonimo (2026.10.1) tirreno; urgency=medium
 
   * First release: all traffic through Tor with a dedicated nftables table

@@ -11,7 +11,7 @@ import urllib.request
 from i18n import helper_message, tr
 from paths import CHECK_URL, DEFAULT, HELPER, PKEXEC, SYSTEMCTL, TOR_UNIT
 from settings import DEFAULT_SETTINGS, SettingsError, load_settings
-from state import clock_problem, compute_state, read_json
+from state import clock_problem, compute_state, firewall_present, read_json
 
 EXIT_CODES = {'protected': 0, 'error': 1, 'connecting': 2, 'off': 3}
 STATE_LABELS = {'off': 'Off', 'connecting': 'Connecting', 'protected': 'Protected', 'error': 'Error'}
@@ -39,13 +39,15 @@ def read_status(paths=DEFAULT, unit=None):
     mode = read_json(paths.mode)
     bootstrap = read_json(paths.bootstrap)
     unit = unit_state() if unit is None else unit
-    state = compute_state(mode, bootstrap, unit)
+    firewall_ok = firewall_present(read_json(paths.firewall_health))
+    state = compute_state(mode, bootstrap, unit, firewall_ok)
     try:
         settings = load_settings(paths.settings)
     except SettingsError:
         settings = dict(DEFAULT_SETTINGS)
     progress = (bootstrap or {}).get('progress', 0)
-    error = ((mode or {}).get('error') or 'Tor is not running') if state == 'error' else None
+    error = ((mode or {}).get('error') or ('Firewall protection is unavailable' if not firewall_ok
+             else 'Tor is not running')) if state == 'error' else None
     return {'state': state, 'progress': progress if isinstance(progress, int) else 0,
             'summary': str((bootstrap or {}).get('summary', '')), 'error': error,
             'clock_problem': clock_problem(bootstrap), 'settings': settings, 'unit': unit}

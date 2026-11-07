@@ -107,6 +107,10 @@ def _status(args, deps, say):
     if args.check:
         try:
             result['check'] = deps.tor_check()
+            if result['check']['is_tor'] is False:
+                status = client.not_tor_status(status)
+                result['state'] = status['state']
+                result['error'] = status['error']
         except client.CheckError as error:
             result['check'] = {'error': str(error)}
     if args.json:

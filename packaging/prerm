@@ -10,6 +10,7 @@ case "$1" in
                 || /usr/sbin/nft delete table inet anonimo >/dev/null 2>&1 || true
         fi
         systemctl disable syslinuxos-anonimo-boot.service >/dev/null 2>&1 || true
+        systemctl disable --now syslinuxos-anonimo-firewall-watch.service >/dev/null 2>&1 || true
         ;;
 esac
 

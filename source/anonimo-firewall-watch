@@ -1,0 +1,4 @@
+#!/usr/bin/python3 -IB
+from firewall_watch import main
+
+raise SystemExit(main())

@@ -70,6 +70,14 @@ class CliTests(unittest.TestCase):
         self.assertEqual(self.out.getvalue().splitlines(),
                          ['Connecting · 60%', 'Traffic goes through Tor. Exit address: 185.220.101.1'])
 
+    def test_status_check_rejects_non_tor_exit(self):
+        self.current = status('protected')
+        self.deps.tor_check = lambda: {'is_tor': False, 'ip': '198.51.100.7'}
+        self.assertEqual(self.run_cli('status', '--json', '--check'), 1)
+        data = json.loads(self.out.getvalue())
+        self.assertEqual(data['state'], 'error')
+        self.assertFalse(data['check']['is_tor'])
+
     def test_status_error_tells_how_to_restore_the_network(self):
         self.current = status('error', error='Tor did not connect in time')
         self.assertEqual(self.run_cli('status'), 1)
