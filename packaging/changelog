@@ -1,3 +1,10 @@
+syslinuxos-anonimo (2026.10.3) tirreno; urgency=medium
+
+  * Fix the firewall watcher failing to start, which made every active
+    session report an unavailable firewall.
+
+ -- Franco Conidi <fconidi@gmail.com>  Sun, 08 Nov 2026 21:30:00 +0100
+
 syslinuxos-anonimo (2026.10.2) tirreno; urgency=medium
 
   * Detect and repair a missing nftables protection table.
