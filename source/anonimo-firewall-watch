@@ -1,4 +1,11 @@
 #!/usr/bin/python3 -IB
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Installed root-owned; keeps the nftables table present and records its health.
+# Isolated Python does not put the script directory on sys.path.
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 from firewall_watch import main
 
-raise SystemExit(main())
+sys.exit(main())

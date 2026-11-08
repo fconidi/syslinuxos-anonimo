@@ -1,6 +1,7 @@
 [Unit]
 Description=Firewall integrity watcher for SysLinuxOS Anonimo
 After=local-fs.target nftables.service
+StartLimitIntervalSec=0
 
 [Service]
 Type=simple

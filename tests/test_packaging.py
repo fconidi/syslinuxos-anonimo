@@ -65,8 +65,17 @@ class PackagingTests(unittest.TestCase):
         firewall_watch = text('syslinuxos-anonimo-firewall-watch.service')
         self.assertIn('ExecStart=/usr/lib/syslinuxos-anonimo/anonimo-firewall-watch\n', firewall_watch)
         self.assertIn('Restart=always\n', firewall_watch)
+        self.assertIn('StartLimitIntervalSec=0\n', firewall_watch)
         self.assertIn('RuntimeDirectory=syslinuxos-anonimo-firewall\n', firewall_watch)
         self.assertIn('WantedBy=multi-user.target\n', firewall_watch)
+
+    def test_firewall_watch_launcher_imports_under_isolated_python(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            launcher = Path(tmp) / 'anonimo-firewall-watch'
+            launcher.write_bytes((ROOT / 'source' / 'anonimo-firewall-watch').read_bytes())
+            (Path(tmp) / 'firewall_watch.py').write_text('def main():\n    print("imported")\n    return 0\n')
+            result = subprocess.run([sys.executable, '-IB', str(launcher)], capture_output=True, text=True, cwd='/')
+        self.assertEqual((result.returncode, result.stdout.strip()), (0, 'imported'), result.stderr)
 
     def test_nftables_drop_in_reapplies_the_table(self):
         drop_in = text('nftables-syslinuxos-anonimo.conf')
