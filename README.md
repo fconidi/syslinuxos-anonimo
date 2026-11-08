@@ -36,7 +36,7 @@ Per Debian 13 (trixie) e derivate. Il pacchetto è
 Scarica il `.deb` dalle [Releases](https://github.com/fconidi/syslinuxos-anonimo/releases) e installalo con apt, così arrivano anche le dipendenze (`tor`, `obfs4proxy`, `nftables`, `python3-pyqt5`, `pkexec`):
 
 ```bash
-sudo apt install ./syslinuxos-anonimo_2026.10.2_all.deb
+sudo apt install ./syslinuxos-anonimo_2026.10.3_all.deb
 ```
 
 Consigliati (installati da apt se le Recommends sono attive): `snowflake-client`, `bleachbit` e un
@@ -138,7 +138,7 @@ For Debian 13 (trixie) and derivatives. The package is
 Download the `.deb` from [Releases](https://github.com/fconidi/syslinuxos-anonimo/releases) and install it with apt, so the dependencies come along too (`tor`, `obfs4proxy`, `nftables`, `python3-pyqt5`, `pkexec`):
 
 ```bash
-sudo apt install ./syslinuxos-anonimo_2026.10.2_all.deb
+sudo apt install ./syslinuxos-anonimo_2026.10.3_all.deb
 ```
 
 Recommended (installed by apt when Recommends are enabled): `snowflake-client`, `bleachbit` and a
